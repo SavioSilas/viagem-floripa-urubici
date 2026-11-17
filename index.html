@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Viagem a Dois — Florianópolis & Urubici (Março 2027)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <!-- SheetJS para importar/exportar roteiro.xlsx diretamente no navegador -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- HERO HEADER -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-top">
+        <div class="badge-group">
+          <span class="hero-badge">✈️ Saída de Manaus (MAO)</span>
+          <span class="hero-badge">🏖️ Florianópolis + 🏔️ Urubici</span>
+          <span class="hero-badge bday">🎂 Aniversário: 17/03</span>
+        </div>
+
+        <div class="sync-bar">
+          <button class="sync-pill" onclick="openSyncModal()" title="Configurar sincronização em tempo real entre vocês dois">
+            <span id="syncDot" class="sync-dot"></span>
+            <span id="syncStatusText">Sincronizar Online (2 Pessoas)</span>
+          </button>
+          <button class="sync-pill" onclick="openTravelersModal()" title="Personalizar nomes do casal">
+            👫 <span id="travelersLabel">Viajante 1 & Viajante 2</span>
+          </button>
+          <button class="sync-pill" onclick="exportToExcel()" title="Baixar planilha Excel (.xlsx) com as edições do site">
+            📥 Exportar .xlsx
+          </button>
+          <a href="./roteiro.xlsx" download="roteiro.xlsx" class="sync-pill" style="text-decoration: none;" title="Baixar o arquivo roteiro.xlsx original do repositório">
+            📄 Planilha Original
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-main">
+        <div class="hero-title">
+          <h1>Viagem a Dois — Florianópolis e Urubici</h1>
+          <p>📅 15 a 22 de março de 2027 (7 noites) • Roteiro colaborativo, reservas e controle financeiro</p>
+        </div>
+
+        <div class="countdown-box" id="countdownBox">
+          <div class="countdown-item">
+            <strong id="cdDays">--</strong>
+            <span>Dias</span>
+          </div>
+          <div class="countdown-item">
+            <strong id="cdHours">--</strong>
+            <span>Horas</span>
+          </div>
+          <div class="countdown-item">
+            <strong id="cdMins">--</strong>
+            <span>Min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <div class="nav-wrapper">
+    <div class="container">
+      <nav class="nav-tabs" aria-label="Seções da viagem">
+        <button class="nav-tab active" data-tab="overview" onclick="switchTab('overview')">
+          📊 Visão Geral & Voos
+        </button>
+        <button class="nav-tab" data-tab="itinerary" onclick="switchTab('itinerary')">
+          🗺️ Roteiro Dia a Dia <span class="tab-count" id="countItinerary">24</span>
+        </button>
+        <button class="nav-tab" data-tab="stays" onclick="switchTab('stays')">
+          🏡 Hospedagens <span class="tab-count" id="countStays">3</span>
+        </button>
+        <button class="nav-tab" data-tab="checklist" onclick="switchTab('checklist')">
+          ✅ Checklist & Reservas <span class="tab-count" id="countChecklist">0/12</span>
+        </button>
+        <button class="nav-tab" data-tab="finance" onclick="switchTab('finance')">
+          💰 Financeiro a Dois <span class="tab-count" id="countFinance">R$ 0</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="container">
+
+    <!-- TAB 1: VISÃO GERAL & VOOS -->
+    <section id="tab-overview" class="tab-panel active">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-header">
+              <span>Progresso do Checklist</span>
+              <span>✅</span>
+            </div>
+            <div class="kpi-value" id="kpiChecklistValue">0 / 12</div>
+            <div class="kpi-sub" id="kpiChecklistSub">0% das pendências concluídas</div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="kpiChecklistBar" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-header">
+              <span>Passeios Planejados</span>
+              <span>🗺️</span>
+            </div>
+            <div class="kpi-value" id="kpiRoteiroValue">24 atividades</div>
+            <div class="kpi-sub" id="kpiRoteiroSub">8 dias (Floripa + Serra Catarinense)</div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="kpiRoteiroBar" style="width: 0%; background: var(--serra)"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-header">
+              <span>Hospedagens Confirmadas</span>
+              <span>🏡</span>
+            </div>
+            <div class="kpi-value" id="kpiStaysValue">0 / 3 períodos</div>
+            <div class="kpi-sub" id="kpiStaysSub">7 noites (2 Floripa • 4 Urubici • 1 Floripa)</div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="kpiStaysBar" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-header">
+              <span>Orçamento & Gastos</span>
+              <span>💳</span>
+            </div>
+            <div class="kpi-value" id="kpiFinancePaid">R$ 1.690,00</div>
+            <div class="kpi-sub" id="kpiFinanceTotal">Previsto total: R$ 1.690,00</div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="kpiFinanceBar" style="width: 100%; background: var(--success)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DADOS DO VOO -->
+      <div class="section-header">
+        <div class="section-title">
+          <h2>✈️ Dados do Voo (Manaus ↔ Florianópolis)</h2>
+          <p>Informações importadas da aba "DADOS DO VOO" da sua planilha</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="openFlightModal()">✏️ Editar Voos</button>
+      </div>
+
+      <div class="flights-grid" id="flightsContainer"></div>
+
+      <!-- RESUMO RÁPIDO: PENDÊNCIAS PRIORITÁRIAS E ETAPAS -->
+      <div class="flights-grid">
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">
+              <h2>⚡ Próximas Providências Prioritárias</h2>
+              <p>Itens pendentes do seu checklist de viagem</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="switchTab('checklist')">Ver todos →</button>
+          </div>
+          <div id="overviewPendingList" class="checklist-grid"></div>
+        </div>
+
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">
+              <h2>🏔️ Resumo das Etapas da Viagem</h2>
+              <p>Divisão das 7 noites entre litoral e serra</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="switchTab('stays')">Hospedagens →</button>
+          </div>
+          <div id="overviewStagesList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: ROTEIRO DIA A DIA -->
+    <section id="tab-itinerary" class="tab-panel">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>🗺️ Roteiro Dia a Dia (15/03 a 22/03/2027)</h2>
+          <p>Acompanhe e edite cada manhã, tarde e noite da viagem</p>
+        </div>
+        <button class="btn btn-primary" onclick="openItineraryModal()">+ Nova Atividade</button>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-pills" id="itineraryCityFilters">
+          <button class="pill-btn active" onclick="setItineraryFilter('city', 'ALL')">📍 Todas as regiões</button>
+          <button class="pill-btn" onclick="setItineraryFilter('city', 'Florianópolis')">🏖️ Florianópolis</button>
+          <button class="pill-btn" onclick="setItineraryFilter('city', 'Urubici')">🏔️ Urubici</button>
+          <button class="pill-btn" onclick="setItineraryFilter('city', 'Bday')">🎂 Dia do Aniversário (17/03)</button>
+        </div>
+        <div>
+          <select id="itineraryStatusFilter" class="form-control" style="width: auto; padding: 6px 12px; font-size: 0.82rem;" onchange="setItineraryFilter('status', this.value)">
+            <option value="ALL">Todos os status</option>
+            <option value="Pendente">⏳ Pendente</option>
+            <option value="Confirmado">📌 Confirmado</option>
+            <option value="Concluído">✅ Concluído</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="itineraryContainer"></div>
+    </section>
+
+    <!-- TAB 3: HOSPEDAGENS -->
+    <section id="tab-stays" class="tab-panel">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>🏡 Controle de Hospedagens</h2>
+          <p>Compare links do Airbnb/Booking, anote valores e confirme as reservas das 3 etapas</p>
+        </div>
+        <button class="btn btn-primary" onclick="openStayModal()">+ Adicionar Período / Opção</button>
+      </div>
+
+      <div class="stay-grid" id="staysContainer"></div>
+    </section>
+
+    <!-- TAB 4: CHECKLIST & RESERVAS -->
+    <section id="tab-checklist" class="tab-panel">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>✅ Reservas e Checklist da Viagem</h2>
+          <p>Marque o que já foi providenciado e divida tarefas entre vocês dois</p>
+        </div>
+        <button class="btn btn-primary" onclick="openChecklistModal()">+ Novo Item no Checklist</button>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-pills">
+          <button class="pill-btn active" id="chkFilterAll" onclick="setChecklistFilter('ALL')">Todos</button>
+          <button class="pill-btn" id="chkFilterPending" onclick="setChecklistFilter('Pendente')">⏳ Pendentes</button>
+          <button class="pill-btn" id="chkFilterProgress" onclick="setChecklistFilter('Em andamento')">🔄 Em andamento</button>
+          <button class="pill-btn" id="chkFilterDone" onclick="setChecklistFilter('Concluído')">✅ Concluídos</button>
+        </div>
+      </div>
+
+      <div class="checklist-grid" id="checklistContainer"></div>
+    </section>
+
+    <!-- TAB 5: CONTROLE FINANCEIRO A DOIS -->
+    <section id="tab-finance" class="tab-panel">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>💰 Controle Financeiro & Divisão a Dois</h2>
+          <p>Acompanhe custos previstos, valores já pagos e a divisão entre o casal</p>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-secondary" onclick="openTravelersModal()">⚙️ Meta & Nomes do Casal</button>
+          <button class="btn btn-primary" onclick="openExpenseModal()">+ Nova Despesa</button>
+        </div>
+      </div>
+
+      <!-- RESUMO DE DIVISÃO ENTRE OS DOIS -->
+      <div class="finance-split-card" id="financeSplitBanner"></div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-header"><span>Total Previsto</span><span>📊</span></div>
+          <div class="kpi-value" id="finTotalEstimated">R$ 0,00</div>
+          <div class="kpi-sub" id="finBudgetGoalSub">Meta de orçamento: R$ 8.000,00</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-header"><span>Total Já Pago</span><span>✅</span></div>
+          <div class="kpi-value" style="color: var(--success)" id="finTotalPaid">R$ 0,00</div>
+          <div class="kpi-sub" id="finPaidPercentSub">0% quitado</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-header"><span>Falta Pagar / Reservar</span><span>⏳</span></div>
+          <div class="kpi-value" style="color: var(--warning)" id="finTotalRemaining">R$ 0,00</div>
+          <div class="kpi-sub">Saldo restante das despesas previstas</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">
+            <h2>📋 Lançamentos de Despesas</h2>
+            <p>Passagens aéreas (R$ 1.690) já lançadas da planilha + estimativas editáveis</p>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Item / Descrição</th>
+                <th>Categoria</th>
+                <th>Previsto (R$)</th>
+                <th>Pago (R$)</th>
+                <th>Pago por</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="financeTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: SINCRONIZAÇÃO ONLINE (2 PESSOAS) -->
+  <div class="modal-backdrop" id="syncModal">
+    <div class="modal-content">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>☁️ Sincronizar Online para Usar a Dois</h2>
+          <p>Qualquer alteração feita por um de vocês atualiza na tela do outro em tempo real</p>
+        </div>
+        <button class="icon-btn" onclick="closeModal('syncModal')">✕</button>
+      </div>
+
+      <div style="background: var(--primary-light); color: var(--primary-dark); padding: 12px 14px; border-radius: 8px; font-size: 0.84rem; margin-bottom: 16px;">
+        <strong>💡 Como funciona:</strong> Conecte gratuitamente um banco <strong>Firebase Realtime Database</strong> (ou <strong>JSONBin / REST</strong>) abaixo. Depois de salvar, clique em <strong>"Copiar Link de Convite"</strong> e envie no WhatsApp da outra pessoa — ao abrir o link, o celular/computador dela já entra conectado automaticamente!
+      </div>
+
+      <div class="form-group">
+        <label for="syncDatabaseUrl">URL do Banco em Nuvem (Firebase Realtime Database URL)</label>
+        <input type="url" id="syncDatabaseUrl" class="form-control" placeholder="Ex: https://sua-viagem-default-rtdb.firebaseio.com" />
+        <small style="color: var(--text-muted); font-size: 0.76rem; display: block; margin-top: 4px;">
+          No <a href="https://console.firebase.google.com/" target="_blank" rel="noopener">Firebase Console</a> (gratuito): Crie um projeto → <em>Realtime Database</em> → <em>Criar banco de dados (Modo de teste)</em> → copie o link <code>https://...firebaseio.com</code> e cole acima.
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label for="syncRoomId">Código da Viagem (Sala do Casal)</label>
+        <input type="text" id="syncRoomId" class="form-control" value="floripa-urubici-2027" placeholder="Ex: floripa-urubici-2027" />
+      </div>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px;">
+        <button class="btn btn-primary" onclick="saveSyncConfig()">☁️ Conectar e Sincronizar Agora</button>
+        <button class="btn btn-secondary" onclick="copyShareInviteLink()">🔗 Copiar Link de Convite para a 2ª Pessoa</button>
+        <button class="btn btn-secondary" onclick="pullFromCloudNow()">🔄 Baixar da Nuvem</button>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid var(--border); margin: 18px 0;" />
+
+      <div class="section-title" style="margin-bottom: 10px;">
+        <h3 style="font-size: 0.95rem;">📂 Backup Manual / Planilha Excel</h3>
+        <p>Você também pode exportar/importar os dados em arquivo a qualquer momento</p>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="exportToExcel()">📥 Baixar Planilha Atualizada (.xlsx)</button>
+        <a href="./roteiro.xlsx" download="roteiro.xlsx" class="btn btn-secondary btn-sm" style="text-decoration: none;">📄 Baixar roteiro.xlsx do Repositório</a>
+        <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+          📊 Importar Planilha (.xlsx)
+          <input type="file" accept=".xlsx,.xls" style="display: none" onchange="importFromExcelFile(event)" />
+        </label>
+        <button class="btn btn-secondary btn-sm" onclick="loadFromRepoExcel()">🔄 Recarregar do roteiro.xlsx do Site</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportBackupJson()">💾 Exportar Backup (.json)</button>
+        <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+          📤 Importar Backup (.json)
+          <input type="file" accept=".json" style="display: none" onchange="importBackupJson(event)" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR VOOS -->
+  <div class="modal-backdrop" id="flightModal">
+    <div class="modal-content">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>✈️ Editar Dados dos Voos</h2>
+        </div>
+        <button class="icon-btn" onclick="closeModal('flightModal')">✕</button>
+      </div>
+      <form onsubmit="saveFlights(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data do Voo de Ida</label>
+            <input type="text" id="flightOutDate" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Rota e Horários (Ida)</label>
+            <input type="text" id="flightOutRoute" class="form-control" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Observações / Localizador (Ida)</label>
+          <input type="text" id="flightOutNotes" class="form-control" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data do Voo de Volta</label>
+            <input type="text" id="flightRetDate" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Rota e Horários (Volta)</label>
+            <input type="text" id="flightRetRoute" class="form-control" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Observações / Localizador (Volta)</label>
+          <input type="text" id="flightRetNotes" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label>Valor Total das Passagens (R$)</label>
+          <input type="number" step="0.01" id="flightTotalCost" class="form-control" required />
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('flightModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Voos</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADICIONAR / EDITAR ATIVIDADE DO ROTEIRO -->
+  <div class="modal-backdrop" id="itineraryModal">
+    <div class="modal-content">
+      <div class="section-header">
+        <div class="section-title">
+          <h2 id="itineraryModalTitle">🗺️ Atividade do Roteiro</h2>
+        </div>
+        <button class="icon-btn" onclick="closeModal('itineraryModal')">✕</button>
+      </div>
+      <form onsubmit="saveItineraryItem(event)">
+        <input type="hidden" id="itiId" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data (DD/MM/AAAA)</label>
+            <input type="text" id="itiDate" class="form-control" placeholder="Ex: 15/03/2027" required />
+          </div>
+          <div class="form-group">
+            <label>Dia da Semana</label>
+            <input type="text" id="itiDay" class="form-control" placeholder="Ex: Segunda" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cidade / Região</label>
+            <input type="text" id="itiCity" class="form-control" placeholder="Ex: Florianópolis ou Urubici" required />
+          </div>
+          <div class="form-group">
+            <label>Período</label>
+            <select id="itiPeriod" class="form-control">
+              <option value="Manhã">Manhã</option>
+              <option value="Tarde">Tarde</option>
+              <option value="Noite">Noite</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Atividade / Passeio</label>
+          <input type="text" id="itiActivity" class="form-control" required />
+        </div>
+        <div class="form-group">
+          <label>Observações / Dicas</label>
+          <textarea id="itiNotes" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="itiStatus" class="form-control">
+            <option value="Pendente">Pendente</option>
+            <option value="Confirmado">Confirmado</option>
+            <option value="Concluído">Concluído</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('itineraryModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: HOSPEDAGEM -->
+  <div class="modal-backdrop" id="stayModal">
+    <div class="modal-content">
+      <div class="section-header">
+        <div class="section-title">
+          <h2 id="stayModalTitle">🏡 Hospedagem</h2>
+        </div>
+        <button class="icon-btn" onclick="closeModal('stayModal')">✕</button>
+      </div>
+      <form onsubmit="saveStayItem(event)">
+        <input type="hidden" id="stayId" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cidade / Destino</label>
+            <input type="text" id="stayCity" class="form-control" placeholder="Ex: Urubici" required />
+          </div>
+          <div class="form-group">
+            <label>Quantidade de Noites</label>
+            <input type="number" id="stayNights" class="form-control" min="1" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Check-in</label>
+            <input type="text" id="stayCheckIn" class="form-control" placeholder="17/03/2027" required />
+          </div>
+          <div class="form-group">
+            <label>Check-out</label>
+            <input type="text" id="stayCheckOut" class="form-control" placeholder="21/03/2027" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nome do Hotel / Chalé / Airbnb</label>
+          <input type="text" id="stayName" class="form-control" placeholder="Ex: Chalé Vista da Serra (ou observação)" required />
+        </div>
+        <div class="form-group">
+          <label>Link do Anúncio / Reserva (opcional)</label>
+          <input type="url" id="stayLink" class="form-control" placeholder="https://www.airbnb.com.br/..." />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Valor Total (R$)</label>
+            <input type="number" step="0.01" id="stayPrice" class="form-control" placeholder="0.00" />
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="stayStatus" class="form-control">
+              <option value="A pesquisar">🔍 A pesquisar</option>
+              <option value="Opções separadas">📋 Opções separadas</option>
+              <option value="Reservado">📌 Reservado</option>
+              <option value="Pago">✅ Pago</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Observações (banheira, lareira, café da manhã, etc.)</label>
+          <textarea id="stayNotes" class="form-control" rows="2"></textarea>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('stayModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Hospedagem</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CHECKLIST ITEM -->
+  <div class="modal-backdrop" id="checklistModal">
+    <div class="modal-content">
+      <div class="section-header">
+        <div class="section-title">
+          <h2 id="checklistModalTitle">✅ Item do Checklist</h2>
+        </div>
+        <button class="icon-btn" onclick="closeModal('checklistModal')">✕</button>
+      </div>
+      <form onsubmit="saveChecklistItem(event)">
+        <input type="hidden" id="chkId" />
+        <div class="form-group">
+          <label>Item</label>
+          <input type="text" id="chkItem" class="form-control" placeholder="Ex: Carro alugado" required />
+        </div>
+        <div class="form-group">
+          <label>O que conferir / providenciar</label>
+          <textarea id="chkDesc" class="form-control" rows="2" required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Prazo / Data</label>
+            <input type="text" id="chkDeadline" class="form-control" placeholder="Ex: Antes da viagem" />
+          </div>
+          <div class="form-group">
+            <label>Responsável</label>
+            <select id="chkOwner" class="form-control">
+              <option value="Ambos">👫 Ambos</option>
+              <option value="P1" id="chkOwnerP1">Viajante 1</option>
+              <option value="P2" id="chkOwnerP2">Viajante 2</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="chkStatus" class="form-control">
+            <option value="Pendente">Pendente</option>
+            <option value="Em andamento">Em andamento</option>
+            <option value="Concluído">Concluído</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('checklistModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: DESPESA FINANCEIRA -->
+  <div class="modal-backdrop" id="expenseModal">
+    <div class="modal-content">
+      <div class="section-header">
+        <div class="section-title">
+          <h2 id="expenseModalTitle">💰 Despesa da Viagem</h2>
+        </div>
+        <button class="icon-btn" onclick="closeModal('expenseModal')">✕</button>
+      </div>
+      <form onsubmit="saveExpenseItem(event)">
+        <input type="hidden" id="expId" />
+        <div class="form-group">
+          <label>Descrição da Despesa</label>
+          <input type="text" id="expTitle" class="form-control" placeholder="Ex: Passagens Aéreas MAO ↔ FLN" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="expCategory" class="form-control">
+              <option value="Passagens">✈️ Passagens</option>
+              <option value="Hospedagem">🏡 Hospedagem</option>
+              <option value="Transporte / Carro">🚗 Transporte / Carro</option>
+              <option value="Passeios / Ingressos">🎟️ Passeios / Ingressos</option>
+              <option value="Alimentação">🍷 Alimentação</option>
+              <option value="Aniversário / Especial">🎂 Aniversário / Especial</option>
+              <option value="Outros">📦 Outros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="expStatus" class="form-control">
+              <option value="Previsto">⏳ Previsto / Orçado</option>
+              <option value="Parcial">🔄 Pago Parcialmente</option>
+              <option value="Pago">✅ Pago</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Valor Previsto (R$)</label>
+            <input type="number" step="0.01" id="expEstimated" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Valor Já Pago (R$)</label>
+            <input type="number" step="0.01" id="expPaid" class="form-control" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Quem pagou?</label>
+          <select id="expPayer" class="form-control">
+            <option value="50/50">👫 Dividido 50/50 (Meio a Meio)</option>
+            <option value="P1" id="expPayerP1">Pago por Viajante 1</option>
+            <option value="P2" id="expPayerP2">Pago por Viajante 2</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('expenseModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Despesa</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: NOMES DO CASAL & META DE ORÇAMENTO -->
+  <div class="modal-backdrop" id="travelersModal">
+    <div class="modal-content">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>👫 Nomes do Casal & Meta Financeira</h2>
+          <p>Personalize os nomes para o checklist e divisão de despesas</p>
+        </div>
+        <button class="icon-btn" onclick="closeModal('travelersModal')">✕</button>
+      </div>
+      <form onsubmit="saveTravelersConfig(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome da Pessoa 1</label>
+            <input type="text" id="cfgPerson1" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Nome da Pessoa 2</label>
+            <input type="text" id="cfgPerson2" class="form-control" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Meta de Orçamento Total da Viagem (R$)</label>
+          <input type="number" step="0.01" id="cfgBudgetGoal" class="form-control" required />
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('travelersModal')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
